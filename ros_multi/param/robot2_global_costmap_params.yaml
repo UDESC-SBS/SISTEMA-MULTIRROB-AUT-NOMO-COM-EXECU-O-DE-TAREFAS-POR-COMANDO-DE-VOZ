@@ -1,0 +1,35 @@
+global_costmap:
+  global_frame: map
+  robot_base_frame: robot2/base_footprint
+
+  update_frequency: 10.0
+  publish_frequency: 10.0
+  transform_tolerance: 0.5
+
+  static_map: true
+
+  plugins:
+    - {name: static_layer,            type: "costmap_2d::StaticLayer"}
+    - {name: obstacle_layer,          type: "costmap_2d::VoxelLayer"}
+    - {name: inflation_layer,         type: "costmap_2d::InflationLayer"}
+
+  static_layer:
+    enabled:              true
+    # map_topic:            "/map"
+    map_topic:            "/robot2/map"
+    subscribe_to_updates: true
+
+  obstacle_layer:
+    enabled: true
+    track_unknown_space: true
+    combination_method: 1
+    lethal_cost_threshold: 100
+    
+    observation_sources: scan
+    scan: {sensor_frame: robot2/base_scan, data_type: LaserScan, topic: /robot2/scan, marking: true, clearing: true, obstacle_range: 3.0, raytrace_range: 4.0}
+  
+  inflation_layer:
+    enabled:              true
+
+    inflation_radius: 1.3
+    cost_scaling_factor: 10.0

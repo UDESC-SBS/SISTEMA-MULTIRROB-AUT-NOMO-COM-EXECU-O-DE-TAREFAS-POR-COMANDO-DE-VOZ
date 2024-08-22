@@ -1,0 +1,100 @@
+<launch>
+  <!-- params -->
+  <arg name="map_file"            value="$(find ros_multi)/maps/map3.yaml"/>
+  <arg name="model"               default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="move_forward_only"   default="false"/>
+
+<!-- First Robot Args -->
+  <arg name="robot1"        default="robot1"/>
+  <arg name="robot1_x"      default=" 0.9"/>
+  <arg name="robot1_y"      default=" 1.7"/>
+  <arg name="robot1_z"      default=" 0.0"/>
+  <arg name="robot1_yaw"    default=" 0.0"/>
+
+<!-- Second Robot Args -->
+  <arg name="robot2"        default="robot2"/>
+  <arg name="robot2_x"      default=" 0.9"/>
+  <arg name="robot2_y"      default=" 2.7"/>
+  <arg name="robot2_z"      default=" 0.0"/>
+  <arg name="robot2_yaw"    default=" 0.0"/>
+
+<!-- Third Robot Args -->
+  <arg name="robot3"        default="robot3"/>
+  <arg name="robot3_x"      default=" 0.9"/>
+  <arg name="robot3_y"      default=" 3.7"/>
+  <arg name="robot3_z"      default=" 0.0"/>
+  <arg name="robot3_yaw"    default=" 0.0"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_house.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+    <param name="frame_id" value="map"/>
+  </node>
+
+  <group ns = "$(arg robot1)">
+    <param name="robot_description" command="$(find xacro)/xacro $(find ros_multi_tb3)/urdf/turtlebot3_waffle_pi.urdf.xacro botname:=$(arg robot1)" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency"   type="double" value="50.0" />
+      <param name="tf_prefix"           value="$(arg robot1)" />
+    </node>
+    
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg robot1) -x $(arg robot1_x) -y $(arg robot1_y) -z $(arg robot1_z) -Y $(arg robot1_yaw) -param robot_description" />
+
+    <!-- move base for turtlebot 1 -->
+    <include file="$(find ros_multi)/launch/move_base.launch">
+      <arg name="namespace" value="$(arg robot1)"/>
+    </include>
+  </group>
+
+
+  <group ns = "$(arg robot2)">
+    <param name="robot_description" command="$(find xacro)/xacro $(find ros_multi_tb3)/urdf/turtlebot3_waffle_pi.urdf.xacro botname:=$(arg robot2)" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency"   type="double" value="50.0" />
+      <param name="tf_prefix"           value="$(arg robot2)" />
+    </node>
+    
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg robot2) -x $(arg robot2_x) -y $(arg robot2_y) -z $(arg robot2_z) -Y $(arg robot2_yaw) -param robot_description" />
+
+    <!-- move base for turtlebot 2 -->
+    <include file="$(find ros_multi)/launch/move_base.launch">
+      <arg name="namespace" value="$(arg robot2)"/>
+    </include>
+  </group>
+
+
+  <group ns = "$(arg robot3)">
+    <param name="robot_description" command="$(find xacro)/xacro $(find ros_multi_tb3)/urdf/turtlebot3_waffle_pi.urdf.xacro botname:=$(arg robot3)" />
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency"   type="double" value="50.0" />
+      <param name="tf_prefix"           value="$(arg robot3)" />
+    </node>
+    
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg robot3) -x $(arg robot3_x) -y $(arg robot3_y) -z $(arg robot3_z) -Y $(arg robot3_yaw) -param robot_description" />
+
+    <!-- move base for turtlebot 3 -->
+    <include file="$(find ros_multi)/launch/move_base.launch">
+      <arg name="namespace" value="$(arg robot3)"/>
+    </include>
+  </group>
+
+
+  <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg robot1)_tf_broadcaster"  args="0 0 0 0 0 0 /map /$(arg robot1)/map 20"/>
+  <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg robot2)_tf_broadcaster" args="0 0 0 0 0 0 /map /$(arg robot2)/map 20"/>
+  <node pkg="tf" type="static_transform_publisher" name="world_to_$(arg robot3)_tf_broadcaster"  args="0 0 0 0 0 0 /map /$(arg robot3)/map 20"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="$(arg robot1)_tf_broadcaster"  args="0 0 0 0 0 0 /$(arg robot1)/map /$(arg robot1)/odom 20"/>
+  <node pkg="tf" type="static_transform_publisher" name="$(arg robot2)_tf_broadcaster"  args="0 0 0 0 0 0 /$(arg robot2)/map /$(arg robot2)/odom 20"/>
+  <node pkg="tf" type="static_transform_publisher" name="$(arg robot3)_tf_broadcaster"  args="0 0 0 0 0 0 /$(arg robot3)/map /$(arg robot3)/odom 20"/> 
+
+</launch>
